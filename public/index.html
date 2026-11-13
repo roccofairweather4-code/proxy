@@ -1,0 +1,87 @@
+<!doctype html>
+<html lang="en">
+	<head>
+		<meta charset="utf-8" />
+		<meta name="viewport" content="width=device-width, initial-scale=1" />
+		<title>Mach 5</title>
+		<meta name="description" content="A fast web proxy powered by Scramjet." />
+		<link rel="icon" href="/favicon.svg" type="image/svg+xml" />
+		<link rel="stylesheet" href="/style.css" />
+		<script src="/baremux/index.js" defer></script>
+		<script src="/scram/scramjet.all.js" defer></script>
+		<script src="/app.js" defer></script>
+	</head>
+	<body>
+		<canvas id="sky" aria-hidden="true"></canvas>
+
+		<!-- Home screen -->
+		<main class="home" id="home">
+			<p class="eyebrow">Powered by Scramjet</p>
+			<h1 class="wordmark">MACH&nbsp;<span>5</span></h1>
+			<p class="tagline">Type a destination. Break the sound barrier.</p>
+
+			<form class="launch" id="launch" autocomplete="off">
+				<svg viewBox="0 0 24 24" aria-hidden="true">
+					<circle cx="11" cy="11" r="7" />
+					<path d="m20 20-3.5-3.5" />
+				</svg>
+				<input
+					id="address"
+					type="text"
+					placeholder="Search or enter a web address"
+					aria-label="Search or enter a web address"
+					autofocus
+					spellcheck="false"
+				/>
+				<button type="submit">Launch</button>
+			</form>
+			<p class="error" id="error" role="alert" hidden></p>
+
+			<nav class="shortcuts" aria-label="Shortcuts">
+				<button class="pill" data-url="https://duckduckgo.com">DuckDuckGo</button>
+				<button class="pill" data-url="https://en.wikipedia.org">Wikipedia</button>
+				<button class="pill" data-url="https://github.com">GitHub</button>
+				<button class="pill" data-url="https://news.ycombinator.com">Hacker News</button>
+				<button class="pill" data-url="https://archive.org">Internet Archive</button>
+			</nav>
+
+			<footer class="status">
+				<span class="dot" id="dot"></span>
+				<span id="status">Warming up engines…</span>
+			</footer>
+		</main>
+
+		<!-- Browser screen -->
+		<section class="browser" id="browser" hidden>
+			<header class="bar">
+				<button id="back" title="Back" aria-label="Back">
+					<svg viewBox="0 0 24 24"><path d="m15 5-7 7 7 7" /></svg>
+				</button>
+				<button id="forward" title="Forward" aria-label="Forward">
+					<svg viewBox="0 0 24 24"><path d="m9 5 7 7-7 7" /></svg>
+				</button>
+				<button id="reload" title="Reload" aria-label="Reload">
+					<svg viewBox="0 0 24 24">
+						<path d="M20 12a8 8 0 1 1-2.6-5.9" />
+						<path d="M20 4v5h-5" />
+					</svg>
+				</button>
+				<form id="bar-form" autocomplete="off">
+					<input id="bar-address" type="text" aria-label="Address" spellcheck="false" />
+				</form>
+				<button id="fullscreen" title="Fullscreen" aria-label="Fullscreen">
+					<svg viewBox="0 0 24 24">
+						<path d="M4 9V4h5M20 9V4h-5M4 15v5h5M20 15v5h-5" />
+					</svg>
+				</button>
+				<button id="exit" title="Home" aria-label="Home">
+					<svg viewBox="0 0 24 24">
+						<path d="m4 11 8-7 8 7" />
+						<path d="M6 10v9h12v-9" />
+					</svg>
+				</button>
+			</header>
+			<div class="viewport" id="viewport"></div>
+		</section>
+	</body>
+</html>

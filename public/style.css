@@ -1,0 +1,361 @@
+:root {
+	--void: #07080d;
+	--panel: #10121b;
+	--line: #232638;
+	--text: #eef0f7;
+	--muted: #8a8fa8;
+	--heat-1: #ffb347;
+	--heat-2: #ff5e3a;
+	--heat-3: #ff3d81;
+	--exhaust: linear-gradient(100deg, var(--heat-1), var(--heat-2) 45%, var(--heat-3));
+	--sans: "Avenir Next", "Segoe UI", system-ui, sans-serif;
+	--mono: ui-monospace, "SF Mono", "Cascadia Code", Menlo, Consolas, monospace;
+}
+
+* {
+	box-sizing: border-box;
+	margin: 0;
+}
+
+html,
+body {
+	height: 100%;
+}
+
+body {
+	background: var(--void);
+	color: var(--text);
+	font-family: var(--sans);
+	overflow: hidden;
+}
+
+#sky {
+	position: fixed;
+	inset: 0;
+	width: 100%;
+	height: 100%;
+	z-index: 0;
+}
+
+/* Soft engine glow rising from the bottom of the screen */
+body::after {
+	content: "";
+	position: fixed;
+	inset: auto -20% -55% -20%;
+	height: 90%;
+	background: radial-gradient(closest-side, rgb(255 94 58 / 0.28), transparent);
+	pointer-events: none;
+	z-index: 0;
+}
+
+/* ---------- Home ---------- */
+
+.home {
+	position: relative;
+	z-index: 1;
+	height: 100%;
+	display: flex;
+	flex-direction: column;
+	align-items: center;
+	justify-content: center;
+	gap: 1.1rem;
+	padding: 1.5rem;
+	text-align: center;
+}
+
+.eyebrow {
+	font-family: var(--mono);
+	font-size: 0.72rem;
+	letter-spacing: 0.32em;
+	text-transform: uppercase;
+	color: var(--muted);
+}
+
+.wordmark {
+	font-size: clamp(3.4rem, 13vw, 8.5rem);
+	font-weight: 800;
+	font-style: italic;
+	letter-spacing: -0.04em;
+	line-height: 0.9;
+	transform: skewX(-6deg);
+}
+
+.wordmark span {
+	background: var(--exhaust);
+	-webkit-background-clip: text;
+	background-clip: text;
+	color: transparent;
+	filter: drop-shadow(0 0 28px rgb(255 94 58 / 0.55));
+}
+
+.tagline {
+	color: var(--muted);
+	font-size: 1.05rem;
+}
+
+.launch {
+	margin-top: 0.9rem;
+	width: min(640px, 100%);
+	display: flex;
+	align-items: center;
+	gap: 0.6rem;
+	padding: 0.4rem 0.4rem 0.4rem 1.1rem;
+	background: rgb(16 18 27 / 0.8);
+	border: 1px solid var(--line);
+	border-radius: 999px;
+	backdrop-filter: blur(12px);
+	transition:
+		border-color 0.2s,
+		box-shadow 0.2s;
+}
+
+.launch:focus-within {
+	border-color: var(--heat-2);
+	box-shadow:
+		0 0 0 4px rgb(255 94 58 / 0.14),
+		0 18px 60px -18px rgb(255 61 129 / 0.6);
+}
+
+.launch svg {
+	width: 20px;
+	flex: none;
+	fill: none;
+	stroke: var(--muted);
+	stroke-width: 2;
+	stroke-linecap: round;
+}
+
+.launch input {
+	flex: 1;
+	min-width: 0;
+	background: none;
+	border: 0;
+	outline: 0;
+	color: var(--text);
+	font: inherit;
+	font-size: 1.05rem;
+	padding: 0.7rem 0;
+}
+
+.launch input::placeholder {
+	color: var(--muted);
+}
+
+.launch button {
+	border: 0;
+	border-radius: 999px;
+	padding: 0.75rem 1.5rem;
+	background: var(--exhaust);
+	color: #1a0a05;
+	font: inherit;
+	font-weight: 700;
+	letter-spacing: 0.02em;
+	cursor: pointer;
+	transition:
+		transform 0.15s,
+		filter 0.15s;
+}
+
+.launch button:hover {
+	filter: brightness(1.12);
+	transform: translateX(2px);
+}
+
+.error {
+	color: var(--heat-1);
+	font-family: var(--mono);
+	font-size: 0.85rem;
+	max-width: 640px;
+}
+
+.shortcuts {
+	display: flex;
+	flex-wrap: wrap;
+	justify-content: center;
+	gap: 0.5rem;
+	margin-top: 0.4rem;
+}
+
+.pill {
+	border: 1px solid var(--line);
+	background: rgb(16 18 27 / 0.6);
+	color: var(--text);
+	font: inherit;
+	font-size: 0.9rem;
+	padding: 0.5rem 1rem;
+	border-radius: 999px;
+	cursor: pointer;
+	text-decoration: none;
+	transition:
+		border-color 0.15s,
+		transform 0.15s;
+}
+
+.pill:hover {
+	border-color: var(--heat-2);
+	transform: translateY(-2px);
+}
+
+.status {
+	position: absolute;
+	bottom: 1.4rem;
+	display: flex;
+	align-items: center;
+	gap: 0.55rem;
+	font-family: var(--mono);
+	font-size: 0.75rem;
+	color: var(--muted);
+}
+
+.dot {
+	width: 8px;
+	height: 8px;
+	border-radius: 50%;
+	background: var(--heat-1);
+	animation: pulse 1.2s infinite;
+}
+
+.dot.ready {
+	background: #4ade80;
+	box-shadow: 0 0 10px #4ade80;
+	animation: none;
+}
+
+.dot.failed {
+	background: var(--heat-3);
+	animation: none;
+}
+
+@keyframes pulse {
+	50% {
+		opacity: 0.3;
+	}
+}
+
+/* ---------- Browser ---------- */
+
+.browser {
+	position: fixed;
+	inset: 0;
+	z-index: 2;
+	display: flex;
+	flex-direction: column;
+	background: var(--void);
+}
+
+.browser[hidden],
+.home[hidden] {
+	display: none;
+}
+
+.bar {
+	display: flex;
+	align-items: center;
+	gap: 0.3rem;
+	padding: 0.45rem 0.6rem;
+	background: var(--panel);
+	border-bottom: 1px solid var(--line);
+	position: relative;
+}
+
+/* Thin exhaust trail under the toolbar */
+.bar::after {
+	content: "";
+	position: absolute;
+	inset: auto 0 -1px 0;
+	height: 2px;
+	background: var(--exhaust);
+	transform-origin: left;
+	transform: scaleX(0);
+	transition: transform 0.6s ease-out;
+}
+
+.browser.loaded .bar::after {
+	transform: scaleX(1);
+}
+
+.bar button {
+	width: 36px;
+	height: 36px;
+	flex: none;
+	display: grid;
+	place-items: center;
+	border: 0;
+	border-radius: 10px;
+	background: none;
+	color: var(--muted);
+	cursor: pointer;
+	transition:
+		background 0.15s,
+		color 0.15s;
+}
+
+.bar button:hover {
+	background: var(--line);
+	color: var(--text);
+}
+
+.bar svg {
+	width: 18px;
+	fill: none;
+	stroke: currentColor;
+	stroke-width: 2;
+	stroke-linecap: round;
+	stroke-linejoin: round;
+}
+
+#bar-form {
+	flex: 1;
+	min-width: 0;
+	margin: 0 0.3rem;
+}
+
+#bar-address {
+	width: 100%;
+	height: 36px;
+	padding: 0 1rem;
+	border: 1px solid var(--line);
+	border-radius: 999px;
+	background: var(--void);
+	color: var(--text);
+	font-family: var(--mono);
+	font-size: 0.85rem;
+	outline: 0;
+}
+
+#bar-address:focus {
+	border-color: var(--heat-2);
+}
+
+.viewport {
+	flex: 1;
+	background: #fff;
+}
+
+.viewport iframe {
+	width: 100%;
+	height: 100%;
+	border: 0;
+	display: block;
+}
+
+:focus-visible {
+	outline: 2px solid var(--heat-1);
+	outline-offset: 2px;
+}
+
+@media (max-width: 520px) {
+	.launch button {
+		padding: 0.75rem 1rem;
+	}
+	#fullscreen {
+		display: none;
+	}
+}
+
+@media (prefers-reduced-motion: reduce) {
+	* {
+		animation: none !important;
+		transition: none !important;
+	}
+}
