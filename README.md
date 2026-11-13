@@ -20,6 +20,14 @@ npm start
 
 Then open <http://localhost:8080>. Set the `PORT` environment variable to use a different port.
 
+## Access code
+
+Visitors have to type an access code before the site (or the proxy itself) will load. The default is `onlylennyandted`.
+To change it, set the `ACCESS_CODE` environment variable on your host, or edit the default near the top of `src/index.js`.
+The code is checked on the server and remembered for 30 days per browser.
+
+If this repo is public, anyone can read the default code in `src/index.js`. Keep the repo private, or set `ACCESS_CODE` on your host to something that isn't in the code.
+
 ## Deploying
 
 This needs a host that runs a Node server and supports websockets (a VPS, Render, Railway, Koyeb, etc.).
@@ -34,7 +42,8 @@ The site must be served over **HTTPS** when it isn't on localhost, or the servic
 | Name, shortcuts      | `public/index.html`                        |
 | Colors, fonts        | the `:root` block in `public/style.css`    |
 | Search engine        | `SEARCH_ENGINE` at the top of `public/app.js` |
-| Port, Wisp settings  | `src/index.js`                             |
+| Access code, port, Wisp settings | `src/index.js`                  |
+| Access code screen   | `public/lock.html`                         |
 
 ## Layout
 

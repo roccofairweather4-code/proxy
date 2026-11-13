@@ -1,4 +1,5 @@
 import { createServer } from "node:http";
+import { createHash, timingSafeEqual } from "node:crypto";
 import { fileURLToPath } from "node:url";
 import { hostname } from "node:os";
 import Fastify from "fastify";
@@ -10,6 +11,51 @@ import { libcurlPath } from "@mercuryworkshop/libcurl-transport";
 import { baremuxPath } from "@mercuryworkshop/bare-mux/node";
 
 const publicPath = fileURLToPath(new URL("../public/", import.meta.url));
+
+/* ---------- Access code ---------- */
+
+// Visitors must type this code before they can use the site.
+// Set the ACCESS_CODE environment variable on your host to change it.
+const ACCESS_CODE = process.env.ACCESS_CODE || "onlylennyandted";
+
+const COOKIE = "mach5_key";
+const hash = (text) => createHash("sha256").update(text).digest();
+const keyHex = hash("mach5:" + ACCESS_CODE).toString("hex");
+
+// Pages and files someone can load before entering the code.
+const OPEN_PATHS = new Set(["/lock.html", "/style.css", "/favicon.svg"]);
+
+function isUnlocked(req) {
+	const cookies = req.headers.cookie || "";
+	return cookies
+		.split(";")
+		.some((part) => part.trim() === `${COOKIE}=${keyHex}`);
+}
+
+function handleUnlock(req, res) {
+	let body = "";
+	req.on("data", (chunk) => {
+		body += chunk;
+		if (body.length > 1000) req.destroy();
+	});
+	req.on("end", () => {
+		let code = "";
+		try {
+			code = String(JSON.parse(body).code || "");
+		} catch {}
+		const ok = timingSafeEqual(hash(code), hash(ACCESS_CODE));
+		if (ok) {
+			res.setHeader(
+				"Set-Cookie",
+				`${COOKIE}=${keyHex}; Path=/; HttpOnly; SameSite=Lax; Max-Age=2592000`
+			);
+		}
+		res.writeHead(ok ? 200 : 401, { "Content-Type": "application/json" });
+		res.end(JSON.stringify({ ok }));
+	});
+}
+
+/* ---------- Proxy ---------- */
 
 // Wisp carries the proxied traffic over a websocket.
 logging.set_level(logging.NONE);
@@ -25,11 +71,21 @@ const fastify = Fastify({
 				// Required so Scramjet can use SharedArrayBuffer.
 				res.setHeader("Cross-Origin-Opener-Policy", "same-origin");
 				res.setHeader("Cross-Origin-Embedder-Policy", "require-corp");
+
+				const path = req.url.split("?")[0];
+				if (req.method === "POST" && path === "/unlock") {
+					return handleUnlock(req, res);
+				}
+				if (!isUnlocked(req) && !OPEN_PATHS.has(path)) {
+					res.writeHead(302, { Location: "/lock.html", "Cache-Control": "no-store" });
+					return res.end();
+				}
 				handler(req, res);
 			})
 			.on("upgrade", (req, socket, head) => {
-				if (req.url.endsWith("/wisp/")) wisp.routeRequest(req, socket, head);
-				else socket.end();
+				if (isUnlocked(req) && req.url.endsWith("/wisp/")) {
+					wisp.routeRequest(req, socket, head);
+				} else socket.end();
 			}),
 });
 

@@ -359,3 +359,22 @@ body::after {
 		transition: none !important;
 	}
 }
+
+/* ---------- Access code screen ---------- */
+
+.launch.shake {
+	animation: shake 0.35s;
+	border-color: var(--heat-3);
+}
+
+@keyframes shake {
+	25% {
+		transform: translateX(-8px);
+	}
+	50% {
+		transform: translateX(8px);
+	}
+	75% {
+		transform: translateX(-4px);
+	}
+}

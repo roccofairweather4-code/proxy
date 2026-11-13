@@ -1,0 +1,58 @@
+<!doctype html>
+<html lang="en">
+	<head>
+		<meta charset="utf-8" />
+		<meta name="viewport" content="width=device-width, initial-scale=1" />
+		<title>Mach 5 — Enter code</title>
+		<link rel="icon" href="/favicon.svg" type="image/svg+xml" />
+		<link rel="stylesheet" href="/style.css" />
+	</head>
+	<body>
+		<main class="home">
+			<p class="eyebrow">Restricted airspace</p>
+			<h1 class="wordmark">MACH&nbsp;<span>5</span></h1>
+			<p class="tagline">Enter the access code to continue.</p>
+
+			<form class="launch" id="gate" autocomplete="off">
+				<svg viewBox="0 0 24 24" aria-hidden="true">
+					<rect x="5" y="11" width="14" height="9" rx="2" />
+					<path d="M8 11V8a4 4 0 0 1 8 0v3" />
+				</svg>
+				<input
+					id="code"
+					type="password"
+					placeholder="Access code"
+					aria-label="Access code"
+					autofocus
+				/>
+				<button type="submit">Unlock</button>
+			</form>
+			<p class="error" id="error" role="alert" hidden>Wrong code. Try again.</p>
+		</main>
+
+		<script>
+			const form = document.getElementById("gate");
+			const input = document.getElementById("code");
+			const error = document.getElementById("error");
+
+			form.addEventListener("submit", async (e) => {
+				e.preventDefault();
+				error.hidden = true;
+				const res = await fetch("/unlock", {
+					method: "POST",
+					headers: { "Content-Type": "application/json" },
+					body: JSON.stringify({ code: input.value }),
+				});
+				if (res.ok) {
+					location.href = "/";
+				} else {
+					error.hidden = false;
+					form.classList.remove("shake");
+					void form.offsetWidth;
+					form.classList.add("shake");
+					input.select();
+				}
+			});
+		</script>
+	</body>
+</html>
