@@ -1,14 +1,13 @@
-importScripts("/scram/scramjet.all.js");
-
-const { ScramjetServiceWorker } = $scramjetLoadWorker();
-const scramjet = new ScramjetServiceWorker();
-
-async function handleRequest(event) {
-	await scramjet.loadConfig();
-	if (scramjet.route(event)) return scramjet.fetch(event);
-	return fetch(event.request);
-}
+importScripts("/controller/controller.sw.js");
 
 self.addEventListener("fetch", (event) => {
-	event.respondWith(handleRequest(event));
+	// shouldRoute keeps the worker from intercepting its own runtime files.
+	if ($scramjetController.shouldRoute(event)) {
+		event.respondWith($scramjetController.route(event));
+	}
 });
+
+self.addEventListener("install", () => self.skipWaiting());
+self.addEventListener("activate", (event) =>
+	event.waitUntil(self.clients.claim())
+);

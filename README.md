@@ -1,6 +1,6 @@
 # Mach 5
 
-A web proxy with a custom UI, powered by [Scramjet](https://github.com/MercuryWorkshop/scramjet).
+A web proxy with a custom UI, powered by [Scramjet](https://github.com/MercuryWorkshop/scramjet) v2.
 
 - Search bar that accepts addresses or search terms
 - Browser toolbar: back, forward, reload, address bar, fullscreen, home
@@ -19,6 +19,10 @@ npm start
 ```
 
 Then open <http://localhost:8080>. Set the `PORT` environment variable to use a different port.
+
+## Scramjet version
+
+This uses Scramjet 2.x, which is still an alpha release and changes between versions. The Scramjet packages are pinned to exact versions in `package.json` (`scramjet` 2.0.67-alpha.2, `scramjet-controller` 0.0.14, `scramjet-utils` 0.0.3). The runtime and controller versions must match, so update them together.
 
 ## Access code
 
@@ -53,6 +57,7 @@ public/index.html  home screen and browser toolbar
 public/style.css   all styling
 public/app.js      Scramjet setup, navigation, background animation
 public/sw.js       Scramjet service worker
+public/lock.html   access code screen
 ```
 
 ## License

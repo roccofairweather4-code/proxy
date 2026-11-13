@@ -1,5 +1,7 @@
 import { createServer } from "node:http";
 import { createHash, timingSafeEqual } from "node:crypto";
+import { createRequire } from "node:module";
+import { dirname } from "node:path";
 import { fileURLToPath } from "node:url";
 import { hostname } from "node:os";
 import Fastify from "fastify";
@@ -7,8 +9,13 @@ import fastifyStatic from "@fastify/static";
 import { server as wisp, logging } from "@mercuryworkshop/wisp-js/server";
 
 import { scramjetPath } from "@mercuryworkshop/scramjet/path";
-import { libcurlPath } from "@mercuryworkshop/libcurl-transport";
-import { baremuxPath } from "@mercuryworkshop/bare-mux/node";
+
+// Scramjet v2's helper packages have no path export, so find their folders.
+const require = createRequire(import.meta.url);
+const dirOf = (name) => dirname(require.resolve(name));
+const controllerPath = dirOf("@mercuryworkshop/scramjet-controller");
+const utilsPath = dirOf("@mercuryworkshop/scramjet-utils");
+const libcurlPath = dirOf("@mercuryworkshop/libcurl-transport");
 
 const publicPath = fileURLToPath(new URL("../public/", import.meta.url));
 
@@ -59,10 +66,6 @@ function handleUnlock(req, res) {
 
 // Wisp carries the proxied traffic over a websocket.
 logging.set_level(logging.NONE);
-Object.assign(wisp.options, {
-	allow_udp_streams: false,
-	dns_servers: ["1.1.1.3", "1.0.0.3"],
-});
 
 const fastify = Fastify({
 	serverFactory: (handler) =>
@@ -83,7 +86,9 @@ const fastify = Fastify({
 				handler(req, res);
 			})
 			.on("upgrade", (req, socket, head) => {
-				if (isUnlocked(req) && req.url.endsWith("/wisp/")) {
+				const path = new URL(req.url ?? "/", "http://localhost").pathname;
+				if (isUnlocked(req) && path === "/wisp/") {
+					req.url = path;
 					wisp.routeRequest(req, socket, head);
 				} else socket.end();
 			}),
@@ -101,8 +106,13 @@ fastify.register(fastifyStatic, {
 	decorateReply: false,
 });
 fastify.register(fastifyStatic, {
-	root: baremuxPath,
-	prefix: "/baremux/",
+	root: controllerPath,
+	prefix: "/controller/",
+	decorateReply: false,
+});
+fastify.register(fastifyStatic, {
+	root: utilsPath,
+	prefix: "/utils/",
 	decorateReply: false,
 });
 
