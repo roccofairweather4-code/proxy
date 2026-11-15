@@ -5,7 +5,7 @@
 // %s is replaced with the search terms.
 const SEARCH_ENGINE = "https://duckduckgo.com/?q=%s";
 
-/* ---------- Scramjet v2 setup ---------- */
+/* ---------- Scramjet v1 setup ---------- */
 
 const $ = (id) => document.getElementById(id);
 const home = $("home");
@@ -13,8 +13,7 @@ const browser = $("browser");
 const errorBox = $("error");
 const barAddress = $("bar-address");
 
-let controller = null;
-let utils = null;
+let scramjet = null;
 let frame = null;
 
 function setStatus(text, state) {
@@ -41,55 +40,30 @@ async function boot() {
 		throw new Error("The proxy needs HTTPS (or localhost) to work.");
 	}
 
-	// 1. Service worker: must be active and controlling this page.
-	const registration = await navigator.serviceWorker.register("/sw.js", {
-		scope: "/",
-		updateViaCache: "none",
-	});
-	await navigator.serviceWorker.ready;
-	if (!navigator.serviceWorker.controller) {
-		await new Promise((resolve) =>
-			navigator.serviceWorker.addEventListener("controllerchange", resolve, {
-				once: true,
-			})
-		);
-	}
-	const serviceworker = navigator.serviceWorker.controller ?? registration.active;
-	if (!serviceworker) throw new Error("The service worker did not become active.");
+	// Loaded here so index.html doesn't need to change.
+	await loadScript("/baremux/index.js");
+	await loadScript("/scram/scramjet.all.js");
 
-	// 2. Scramjet runtime, controller and utilities (order matters).
-	for (const src of [
-		"/scram/scramjet.js",
-		"/controller/controller.api.js",
-		"/utils/scramjet-utils.js",
-	]) {
-		await loadScript(src);
-	}
-	utils = window.$scramjetUtils;
-
-	// 3. Transport: libcurl over this server's Wisp endpoint.
-	const { default: LibcurlClient } = await import("/libcurl/index.mjs");
-	const scheme = location.protocol === "https:" ? "wss:" : "ws:";
-	const transport = new LibcurlClient({
-		wisp: `${scheme}//${location.host}/wisp/`,
-	});
-
-	// 4. Controller.
-	controller = new window.$scramjetController.Controller({
-		serviceworker,
-		transport,
-		config: {
-			scramjetPath: "/scram/scramjet.js",
-			wasmPath: "/scram/scramjet.wasm",
-			injectPath: "/controller/controller.inject.js",
+	const { ScramjetController } = $scramjetLoadController();
+	scramjet = new ScramjetController({
+		files: {
+			wasm: "/scram/scramjet.wasm.wasm",
+			all: "/scram/scramjet.all.js",
+			sync: "/scram/scramjet.sync.js",
 		},
 	});
-	await controller.wait();
+	await scramjet.init();
 
-	// Keeps an idle service worker from losing its routing state.
-	setInterval(() => {
-		navigator.serviceWorker.controller?.postMessage("keepalive");
-	}, 15000);
+	await navigator.serviceWorker.register("/sw.js", { updateViaCache: "none" });
+	await navigator.serviceWorker.ready;
+
+	// Transport: libcurl over this server's Wisp endpoint.
+	const connection = new BareMux.BareMuxConnection("/baremux/worker.js");
+	const scheme = location.protocol === "https:" ? "wss:" : "ws:";
+	const wispUrl = `${scheme}//${location.host}/wisp/`;
+	if ((await connection.getTransport()) !== "/libcurl/index.mjs") {
+		await connection.setTransport("/libcurl/index.mjs", [{ websocket: wispUrl }]);
+	}
 }
 
 const ready = boot().then(
@@ -134,22 +108,14 @@ async function go(input) {
 	const url = toUrl(input);
 
 	if (!frame) {
-		const iframe = document.createElement("iframe");
-		iframe.title = "Proxied page";
-		iframe.addEventListener("load", () => browser.classList.add("loaded"));
-		frame = controller.createFrame(iframe, {
-			plugins: [
-				new utils.HttpCachePlugin(),
-				// Keeps the address bar in sync as the page navigates.
-				new utils.UrlWatcherPlugin((current) => {
-					if (current && document.activeElement !== barAddress) {
-						barAddress.value = String(current);
-					}
-				}),
-			],
+		frame = scramjet.createFrame();
+		frame.frame.title = "Proxied page";
+		frame.frame.addEventListener("load", () => browser.classList.add("loaded"));
+		// Keeps the address bar in sync as the page navigates.
+		frame.addEventListener("urlchange", (e) => {
+			if (e.url && document.activeElement !== barAddress) barAddress.value = e.url;
 		});
-		// createFrame doesn't attach the iframe, so add it to the page here.
-		$("viewport").appendChild(iframe);
+		$("viewport").appendChild(frame.frame);
 	}
 
 	browser.classList.remove("loaded");

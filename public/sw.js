@@ -1,32 +1,19 @@
-importScripts("/controller/controller.sw.js");
+importScripts("/scram/scramjet.all.js");
 
-// Some sites (Discord's homepage included) lock their stylesheets with an
-// "integrity" hash. Scramjet rewrites those files, the hash stops matching,
-// and the browser throws the styles away. Stripping the attribute fixes it.
-const INTEGRITY = /\sintegrity\s*=\s*("[^"]*"|'[^']*'|[^\s>]+)/gi;
+const { ScramjetServiceWorker } = $scramjetLoadWorker();
+const scramjet = new ScramjetServiceWorker();
 
-async function stripIntegrity(responsePromise) {
-	const response = await responsePromise;
-	const type = response.headers.get("content-type") || "";
-	if (!type.includes("text/html") || !response.ok) return response;
-
-	const html = await response.text();
-	const headers = new Headers(response.headers);
-	headers.delete("content-length");
-	return new Response(html.replace(INTEGRITY, ""), {
-		status: response.status,
-		statusText: response.statusText,
-		headers,
-	});
+async function handleRequest(event) {
+	await scramjet.loadConfig();
+	if (scramjet.route(event)) return scramjet.fetch(event);
+	return fetch(event.request);
 }
 
 self.addEventListener("fetch", (event) => {
-	// shouldRoute keeps the worker from intercepting its own runtime files.
-	if ($scramjetController.shouldRoute(event)) {
-		event.respondWith(stripIntegrity($scramjetController.route(event)));
-	}
+	event.respondWith(handleRequest(event));
 });
 
+// Take over straight away so the v2 worker is replaced on the next visit.
 self.addEventListener("install", () => self.skipWaiting());
 self.addEventListener("activate", (event) =>
 	event.waitUntil(self.clients.claim())

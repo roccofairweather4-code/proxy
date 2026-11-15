@@ -1,7 +1,5 @@
 import { createServer } from "node:http";
 import { createHash, timingSafeEqual } from "node:crypto";
-import { createRequire } from "node:module";
-import { dirname } from "node:path";
 import { fileURLToPath } from "node:url";
 import { hostname } from "node:os";
 import Fastify from "fastify";
@@ -9,13 +7,8 @@ import fastifyStatic from "@fastify/static";
 import { server as wisp, logging } from "@mercuryworkshop/wisp-js/server";
 
 import { scramjetPath } from "@mercuryworkshop/scramjet/path";
-
-// Scramjet v2's helper packages have no path export, so find their folders.
-const require = createRequire(import.meta.url);
-const dirOf = (name) => dirname(require.resolve(name));
-const controllerPath = dirOf("@mercuryworkshop/scramjet-controller");
-const utilsPath = dirOf("@mercuryworkshop/scramjet-utils");
-const libcurlPath = dirOf("@mercuryworkshop/libcurl-transport");
+import { libcurlPath } from "@mercuryworkshop/libcurl-transport";
+import { baremuxPath } from "@mercuryworkshop/bare-mux/node";
 
 const publicPath = fileURLToPath(new URL("../public/", import.meta.url));
 
@@ -106,13 +99,8 @@ fastify.register(fastifyStatic, {
 	decorateReply: false,
 });
 fastify.register(fastifyStatic, {
-	root: controllerPath,
-	prefix: "/controller/",
-	decorateReply: false,
-});
-fastify.register(fastifyStatic, {
-	root: utilsPath,
-	prefix: "/utils/",
+	root: baremuxPath,
+	prefix: "/baremux/",
 	decorateReply: false,
 });
 
